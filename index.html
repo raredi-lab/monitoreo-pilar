@@ -111,6 +111,12 @@
   .hidden{display:none}
   ul{margin:.4rem 0;padding-left:1.2rem}
   li{margin:.25rem 0}
+  @media print{
+    header,nav,.disc,.no-print{display:none!important}
+    body{padding:0;background:#fff}
+    main{max-width:none}
+    .card{box-shadow:none;border:1px solid #ccc;break-inside:avoid}
+  }
 </style>
   <meta name="apple-mobile-web-app-title" content="Cuidado de Pilar">
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgdmlld0JveD0iMCAwIDUxMiA1MTIiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPHJlY3QgeD0iMCIgeT0iMCIgd2lkdGg9IjUxMiIgaGVpZ2h0PSI1MTIiIHJ4PSIxMTIiIGZpbGw9IiNGRkZGRkYiLz4KICA8cmVjdCB4PSIwIiB5PSIwIiB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgcng9IjExMiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjRTdFMkQ5IiBzdHJva2Utd2lkdGg9IjYiLz4KICA8IS0tIENydXogdmVyZGUgZGUgZmFybWFjaWEgLS0+CiAgPGcgZmlsbD0iIzE2QTM0QSI+CiAgICA8cmVjdCB4PSIxOTgiIHk9IjEwNiIgd2lkdGg9IjExNiIgaGVpZ2h0PSIzMDAiIHJ4PSIzMCIvPgogICAgPHJlY3QgeD0iMTA2IiB5PSIxOTgiIHdpZHRoPSIzMDAiIGhlaWdodD0iMTE2IiByeD0iMzAiLz4KICA8L2c+CiAgPCEtLSBDb3JhesOzbiByb2pvIGVuY2ltYSwgY29uIGJvcmRlIGJsYW5jbyBwYXJhIHNlcGFyYXJsbyBkZSBsYSBjcnV6IC0tPgogIDxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDE1NiwxNjApIHNjYWxlKDIpIj4KICAgIDxwYXRoIGQ9Ik01MCw4NCBDMjQsNjIgOCw0OCA4LDMwIEM4LDE2IDE4LDggMzAsOCBDMzksOCA0NiwxNCA1MCwyMiBDNTQsMTQgNjEsOCA3MCw4IEM4Miw4IDkyLDE2IDkyLDMwIEM5Miw0OCA3Niw2MiA1MCw4NCBaIgogICAgICAgICAgZmlsbD0iI0UxMUQ0OCIgc3Ryb2tlPSIjRkZGRkZGIiBzdHJva2Utd2lkdGg9IjUiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KICA8L2c+Cjwvc3ZnPgo=">
@@ -326,6 +332,7 @@ function render(view){
   if(view==="medicacion") return viewMedicacion();
   if(view==="medhist") return viewMedHistorial();
   if(view==="historial") return viewHistorial();
+  if(view==="informe") return viewInforme();
   if(view==="ajustes") return viewAjustes();
 }
 
@@ -566,9 +573,9 @@ function viewHistorial(){
   const regs = load(KEYS.reg,[]);
   if(!regs.length){ app.innerHTML=`<div class="card"><p>Todavía no hay registros. Empieza por <b>Registrar constantes</b>.</p></div>`; return; }
   let items = regs.slice(0,60).map((r,i)=>`
-    <div class="hist-item ${r.nivel}" style="display:flex;align-items:flex-start;gap:10px">
+    <div class="hist-item ${r.nivel||''}" style="display:flex;align-items:flex-start;gap:10px">
       <div style="flex:1">
-        <div class="when">${fmtFecha(r.fecha)} ${r.hora} ${r.nivel==="bad"?"🔴":r.nivel==="warn"?"🟠":"🟢"}</div>
+        <div class="when">${fmtFechaSafe(r.fecha)} ${r.hora||''} ${r.nivel==="bad"?"🔴":r.nivel==="warn"?"🟠":"🟢"}</div>
         <div class="vals">${r.tas?`TA ${r.tas}/${r.tad??"—"}`:""} ${r.fc?`· ${r.fc} lpm`:""} ${r.spo2?`· O₂ ${r.spo2}%`:""} ${r.temp?`· ${r.temp}°`:""} ${r.glu?`· glu ${r.glu}`:""}</div>
         ${r.sintomas&&r.sintomas.length?`<div class="muted">Síntomas: ${r.sintomas.join("; ")}</div>`:""}
         ${r.nota?`<div class="muted">Nota: ${r.nota}</div>`:""}
@@ -577,19 +584,30 @@ function viewHistorial(){
     </div>`).join("");
   app.innerHTML = `
     <div class="card"><h2>Para el médico</h2>
-      <button class="btn" onclick="copiarResumen()">Copiar resumen de los últimos 14 días</button>
+      <button class="btn" onclick="go('informe')">📄 Informe semanal</button>
+      <button class="btn ghost" onclick="copiarResumen()">Copiar resumen de los últimos 14 días</button>
       <p class="muted">Pega el texto en un mensaje o muéstralo en la consulta.</p>
       <button class="btn ghost" onclick="exportarArchivo()">📤 Exportar / compartir registros</button>
     </div>
-    <div class="card"><h2>Registros</h2><p class="muted" style="margin-top:0">Pulsa 🗑️ para borrar un registro mal introducido.</p>${items}</div>`;
+    <div class="card"><h2>Registros</h2><p class="muted" style="margin-top:0">Pulsa 🗑️ para borrar un registro mal introducido.</p>${items}
+      <button class="btn ghost" style="margin-top:12px;color:var(--bad);border-color:var(--bad-line)" onclick="vaciarHistorial()">Vaciar todo el historial</button>
+    </div>`;
 }
+function fmtFechaSafe(iso){ try{ if(!iso) return "(sin fecha)"; const p=String(iso).split("-"); return p.length===3? p[2]+"/"+p[1]+"/"+p[0] : String(iso); }catch(e){ return "(sin fecha)"; } }
 function borrarRegistro(i){
-  const regs = load(KEYS.reg,[]);
-  const r = regs[i]; if(!r) return;
-  const det = (r.tas?`TA ${r.tas}/${r.tad??"—"}`:"") + (r.fc?` · ${r.fc} lpm`:"");
-  if(confirm(`¿Borrar el registro del ${fmtFecha(r.fecha)} a las ${r.hora}?\n${det.trim()}\n\nEsta acción no se puede deshacer.`)){
-    regs.splice(i,1); save(KEYS.reg, regs); viewHistorial();
-  }
+  try{
+    const regs = load(KEYS.reg,[]);
+    const r = regs[i]; if(!r){ alert("No se encontró ese registro (vuelve a abrir el Historial)."); return; }
+    const det = (r.tas?`TA ${r.tas}/${r.tad??"—"}`:"") + (r.fc?` · ${r.fc} lpm`:"");
+    if(confirm(`¿Borrar el registro del ${fmtFechaSafe(r.fecha)} a las ${r.hora||"—"}?\n${det.trim()}\n\nNo se puede deshacer.`)){
+      regs.splice(i,1); save(KEYS.reg, regs); viewHistorial();
+    }
+  }catch(e){ alert("No se pudo borrar: "+(e&&e.message?e.message:e)); }
+}
+function vaciarHistorial(){
+  if(!confirm("¿Borrar TODOS los registros de constantes?\nEsto NO afecta a la medicación. No se puede deshacer.")) return;
+  if(!confirm("Confírmalo de nuevo: se borrará todo el historial de constantes.")) return;
+  save(KEYS.reg, []); viewHistorial();
 }
 function copiarResumen(){
   const regs=load(KEYS.reg,[]);
@@ -601,6 +619,173 @@ function copiarResumen(){
     (r.sintomas&&r.sintomas.length?` | síntomas: ${r.sintomas.join("; ")}`:"")+(r.nota?` | ${r.nota}`:"")+"\n"; });
   if(!sel.length) txt+="(sin registros en este periodo)";
   navigator.clipboard?.writeText(txt).then(()=>alert("Resumen copiado."),()=>prompt("Copia este texto:",txt));
+}
+
+/* INFORME */
+function isoSuma(iso,n){ const d=new Date(iso+"T00:00:00"); d.setDate(d.getDate()+n); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+function rango(arr,dec){ if(!arr.length) return null; const f=x=> dec?(Math.round(x*10)/10):Math.round(x);
+  return {n:arr.length, min:f(Math.min(...arr)), max:f(Math.max(...arr)), avg:f(arr.reduce((a,b)=>a+b,0)/arr.length)}; }
+let _infIni=null, _infFin=null;
+function recalcInforme(){ _infIni=val("inf_ini")||null; _infFin=val("inf_fin")||null; viewInforme(); }
+function viewInforme(){
+  elTitle.textContent="Informe"; elSub.textContent="Resumen del periodo";
+  const fin = _infFin || hoyISO();
+  const ini = _infIni || isoSuma(fin,-6);
+  const out = construirInforme(ini, fin);
+  app.innerHTML = `
+    <div class="card no-print">
+      <h2>Informe del periodo</h2>
+      <div class="row">
+        <div class="field"><label>Desde</label><input id="inf_ini" type="date" value="${ini}"></div>
+        <div class="field"><label>Hasta</label><input id="inf_fin" type="date" value="${fin}"></div>
+      </div>
+      <button class="btn ghost" onclick="recalcInforme()">Recalcular</button>
+    </div>
+    <div id="reportContent">${out.html}</div>
+    <div class="card no-print">
+      <button class="btn" onclick="compartirInforme()">📤 Compartir informe</button>
+      <button class="btn ghost" onclick="copiarInforme()">📋 Copiar como texto</button>
+      <button class="btn ghost" onclick="window.print()">🖨️ Imprimir / Guardar PDF</button>
+    </div>`;
+  _infTexto = out.texto;
+}
+let _infTexto = "";
+function compartirInforme(){
+  if(navigator.share){ navigator.share({title:"Informe de Pilar", text:_infTexto}).catch(()=>{}); }
+  else copiarInforme();
+}
+function copiarInforme(){
+  if(navigator.clipboard){ navigator.clipboard.writeText(_infTexto).then(()=>alert("Informe copiado."),()=>prompt("Copia este texto:",_infTexto)); }
+  else prompt("Copia este texto:",_infTexto);
+}
+function dayPart(hora){
+  const h = parseInt((hora||"").slice(0,2),10);
+  if(isNaN(h)) return {k:"",lab:"",col:"#6B7280"};
+  if(h>=5 && h<12) return {k:"m",lab:"M",col:"#B45309"};      // mañana
+  if(h>=12 && h<18) return {k:"md",lab:"Md",col:"#0F766E"};   // mediodía
+  return {k:"n",lab:"N",col:"#4338CA"};                       // noche
+}
+function graficaTA(regs){
+  const pts = regs.filter(r=>r.tas!=null).map(r=>({f:r.fecha,h:r.hora,s:r.tas,d:(r.tad!=null?r.tad:null),dp:dayPart(r.hora)}));
+  if(pts.length<2) return `<div class="card"><h2>Evolución de la tensión</h2><p class="muted">Hacen falta al menos 2 tomas con tensión para dibujar la gráfica.</p></div>`;
+  const W=340,H=234,padL=34,padR=12,padT=14,padB=46, plotW=W-padL-padR, plotH=H-padT-padB;
+  const sVals=pts.map(p=>p.s), dVals=pts.filter(p=>p.d!=null).map(p=>p.d);
+  const allMin=Math.min(...sVals.concat(dVals)), allMax=Math.max(...sVals.concat(dVals));
+  let ymin=Math.floor((allMin-10)/20)*20; if(ymin<0)ymin=0;
+  let ymax=Math.ceil((allMax+10)/20)*20; if(ymax-ymin<40) ymax=ymin+40;
+  const step=(ymax-ymin)>120?40:20;
+  const x=i=> padL + (i*plotW/(pts.length-1));
+  const y=v=> padT + plotH*(1-(v-ymin)/(ymax-ymin));
+  const baseY=H-padB;
+  // agrupar por día (los puntos vienen ordenados por fecha+hora)
+  const groups=[]; pts.forEach((p,i)=>{ const g=groups[groups.length-1]; if(g && g.f===p.f) g.last=i; else groups.push({f:p.f,first:i,last:i}); });
+  const seps=[]; for(let g=0; g<groups.length-1; g++){ seps[g]=(x(groups[g].last)+x(groups[g+1].first))/2; }
+  // sombreado alterno por día
+  let bands="";
+  groups.forEach((g,gi)=>{ const left= gi===0? padL : seps[gi-1]; const right= gi===groups.length-1? (W-padR) : seps[gi];
+    if(gi%2===1) bands+=`<rect x="${left.toFixed(1)}" y="${padT}" width="${(right-left).toFixed(1)}" height="${plotH}" fill="#0F766E" opacity="0.05"/>`; });
+  // separadores de día
+  let sepLines=""; seps.forEach(sx=> sepLines+=`<line x1="${sx.toFixed(1)}" y1="${padT}" x2="${sx.toFixed(1)}" y2="${baseY}" stroke="#D8D2C7" stroke-width="1" stroke-dasharray="2 2"/>`);
+  // rejilla horizontal + etiquetas Y
+  let grid="";
+  for(let v=ymin; v<=ymax; v+=step){ const yy=y(v).toFixed(1);
+    grid+=`<line x1="${padL}" y1="${yy}" x2="${W-padR}" y2="${yy}" stroke="#E7E2D9" stroke-width="1"/>`;
+    grid+=`<text x="${padL-4}" y="${(+yy+3).toFixed(1)}" font-size="8" text-anchor="end" fill="#6B7280">${v}</text>`; }
+  // etiqueta de momento del día bajo cada punto (si no hay demasiados)
+  let dplab="";
+  if(pts.length<=24) pts.forEach((p,i)=>{ if(p.dp.lab) dplab+=`<text x="${x(i).toFixed(1)}" y="${baseY+12}" font-size="7" text-anchor="middle" fill="${p.dp.col}" font-weight="bold">${p.dp.lab}</text>`; });
+  // fecha centrada por día
+  let xlab=""; groups.forEach(g=>{ const cx=(x(g.first)+x(g.last))/2; const dd=g.f.slice(8,10)+"/"+g.f.slice(5,7);
+    xlab+=`<text x="${cx.toFixed(1)}" y="${baseY+24}" font-size="8" text-anchor="middle" fill="#6B7280">${dd}</text>`; });
+  // líneas y puntos
+  const SCOL="#DC2626", DCOL="#2563EB";
+  const polyS=pts.map((p,i)=>`${x(i).toFixed(1)},${y(p.s).toFixed(1)}`).join(" ");
+  const dPts=pts.map((p,i)=>({i,d:p.d})).filter(o=>o.d!=null);
+  const polyD=dPts.map(o=>`${x(o.i).toFixed(1)},${y(o.d).toFixed(1)}`).join(" ");
+  let dots="";
+  pts.forEach((p,i)=>{ dots+=`<circle cx="${x(i).toFixed(1)}" cy="${y(p.s).toFixed(1)}" r="2.5" fill="${SCOL}"/>`;
+    if(p.d!=null) dots+=`<circle cx="${x(i).toFixed(1)}" cy="${y(p.d).toFixed(1)}" r="2.5" fill="${DCOL}"/>`; });
+  const svg=`<svg viewBox="0 0 ${W} ${H}" width="100%" xmlns="http://www.w3.org/2000/svg" style="max-width:480px">
+    ${bands}${grid}${sepLines}${dplab}${xlab}
+    <polyline points="${polyS}" fill="none" stroke="${SCOL}" stroke-width="2" stroke-linejoin="round"/>
+    ${polyD?`<polyline points="${polyD}" fill="none" stroke="${DCOL}" stroke-width="2" stroke-linejoin="round"/>`:""}
+    ${dots}</svg>`;
+  const legend=`<div style="display:flex;gap:16px;font-size:.85rem;margin-top:6px;flex-wrap:wrap">
+     <span><span style="display:inline-block;width:14px;height:3px;background:${SCOL};vertical-align:middle;margin-right:5px"></span>Máxima (sistólica)</span>
+     <span><span style="display:inline-block;width:14px;height:3px;background:${DCOL};vertical-align:middle;margin-right:5px"></span>Mínima (diastólica)</span></div>
+     <div class="muted" style="font-size:.78rem;margin-top:4px">Momento del día: <b style="color:#B45309">M</b> mañana · <b style="color:#0F766E">Md</b> mediodía · <b style="color:#4338CA">N</b> noche</div>`;
+  return `<div class="card"><h2>Evolución de la tensión (mmHg)</h2>${svg}${legend}</div>`;
+}
+function construirInforme(ini, fin){
+  const regs = load(KEYS.reg,[]).filter(r=> r.fecha>=ini && r.fecha<=fin)
+    .sort((a,b)=>(a.fecha+(a.hora||"")).localeCompare(b.fecha+(b.hora||"")));
+  const tas=regs.filter(r=>r.tas!=null).map(r=>r.tas), tad=regs.filter(r=>r.tad!=null).map(r=>r.tad);
+  const fc=regs.filter(r=>r.fc!=null).map(r=>r.fc), spo2=regs.filter(r=>r.spo2!=null).map(r=>r.spo2);
+  const temp=regs.filter(r=>r.temp!=null).map(r=>r.temp), glu=regs.filter(r=>r.glu!=null).map(r=>r.glu);
+  const rTas=rango(tas), rTad=rango(tad), rFc=rango(fc), rSpo2=rango(spo2), rTemp=rango(temp,1), rGlu=rango(glu);
+  // pico de tensión
+  let pico=null; regs.forEach(r=>{ if(r.tas!=null && (!pico || r.tas>pico.tas)) pico=r; });
+  const elevadas = regs.filter(r=> (r.tas!=null && r.tas>=UMB.tas_vigilar) || (r.tad!=null && r.tad>=UMB.tad_alta)).length;
+  const bajas = regs.filter(r=> r.tas!=null && r.tas<UMB.tas_muy_baja).length;
+  const avisos = regs.filter(r=> r.nivel==="bad" || (r.sintomas&&r.sintomas.length));
+  const notas = regs.filter(r=> r.nota);
+  // medicación por día
+  const allMed=load(KEYS.med,{}); const totalDia=PAUTA.reduce((a,g)=>a+g.items.length,0);
+  let medDias=[], d=ini; while(d<=fin){ const est=allMed[d]||{}; const dadas=Object.keys(est).filter(id=>medHecho(est[id])).length; medDias.push({d,dadas}); d=isoSuma(d,1); }
+  const diasConToma = medDias.filter(x=>x.dadas>0).length;
+
+  const periodo = `${fmtFecha(ini)} – ${fmtFecha(fin)}`;
+  const ln = (et,r,u)=> r ? `<p><b>${et}:</b> media ${r.avg}${u||""} · rango ${r.min}–${r.max}${u||""} <span class="muted">(${r.n} tomas)</span></p>` : "";
+
+  // ---- HTML visible ----
+  let html = `<div class="card"><h2 style="margin-bottom:4px">Pilar Díez</h2>
+      <p class="muted" style="margin-top:0">Informe de seguimiento · ${periodo}</p>`;
+  if(!regs.length){ html += `<p>No hay constantes registradas en este periodo.</p>`; }
+  else {
+    html += ln("Tensión sistólica", rTas) + ln("Tensión diastólica", rTad);
+    if(pico) html += `<p>🔺 <b>Pico de tensión:</b> ${pico.tas}/${pico.tad??"—"} el ${fmtFecha(pico.fecha)} a las ${pico.hora}</p>`;
+    if(elevadas||bajas) html += `<p>${elevadas?`⚠️ Tomas elevadas: ${elevadas}. `:""}${bajas?`⬇️ Tomas bajas: ${bajas}.`:""}</p>`;
+    html += ln("Pulso", rFc, " lpm") + ln("Oxígeno", rSpo2, "%") + ln("Temperatura", rTemp, "°C") + ln("Azúcar", rGlu);
+  }
+  html += `</div>`;
+  if(regs.length) html += graficaTA(regs);
+  // Avisos
+  html += `<div class="card"><h2>Avisos y síntomas</h2>`;
+  if(!avisos.length) html += `<p>🟢 Sin avisos ni síntomas registrados en el periodo.</p>`;
+  else avisos.forEach(r=>{ html += `<div class="hist-item ${r.nivel}"><div class="when">${fmtFecha(r.fecha)} ${r.hora}</div>
+    <div>${r.tas?`TA ${r.tas}/${r.tad??"—"}`:""} ${r.fc?`· ${r.fc} lpm`:""}</div>
+    ${r.sintomas&&r.sintomas.length?`<div class="muted">Síntomas: ${r.sintomas.join("; ")}</div>`:""}</div>`; });
+  html += `</div>`;
+  // Medicación
+  html += `<div class="card"><h2>Medicación marcada</h2>
+    <p>Días con tomas registradas: <b>${diasConToma} de ${medDias.length}</b>.</p>
+    <p class="muted" style="margin-top:0">Refleja solo lo marcado en la app (hasta ${totalDia} apuntes diarios posibles), no es prueba de adherencia.</p>`;
+  medDias.forEach(x=>{ html += `<div style="padding:4px 0;border-bottom:1px solid var(--line)">${fmtFecha(x.d)} · ${x.dadas>0?`${x.dadas}/${totalDia} marcadas`:`<span class="muted">sin marcar</span>`}</div>`; });
+  html += `</div>`;
+  // Notas
+  if(notas.length){ html += `<div class="card"><h2>Notas</h2>`; notas.forEach(r=> html += `<p><b>${fmtFecha(r.fecha)} ${r.hora}:</b> ${r.nota}</p>`); html += `</div>`; }
+  html += `<div class="note">Resumen de lo registrado en la app. Los umbrales son provisionales y orientativos. <b>No es un documento médico</b>; sirve de apoyo para la consulta con su médico.</div>`;
+
+  // ---- TEXTO para copiar/compartir ----
+  let t = `INFORME DE SEGUIMIENTO — Pilar Díez\nPeriodo: ${periodo}\n\n`;
+  if(!regs.length) t += "Sin constantes registradas en este periodo.\n";
+  else {
+    if(rTas) t+=`Tensión sistólica: media ${rTas.avg}, rango ${rTas.min}-${rTas.max} (${rTas.n} tomas)\n`;
+    if(rTad) t+=`Tensión diastólica: media ${rTad.avg}, rango ${rTad.min}-${rTad.max}\n`;
+    if(pico) t+=`Pico de tensión: ${pico.tas}/${pico.tad??"—"} el ${fmtFecha(pico.fecha)} ${pico.hora}\n`;
+    if(elevadas||bajas) t+=`Tomas elevadas: ${elevadas} · tomas bajas: ${bajas}\n`;
+    if(rFc) t+=`Pulso: media ${rFc.avg} lpm, rango ${rFc.min}-${rFc.max}\n`;
+    if(rSpo2) t+=`Oxígeno: media ${rSpo2.avg}%, mínimo ${rSpo2.min}%\n`;
+    if(rTemp) t+=`Temperatura: máx ${rTemp.max}°C\n`;
+    if(rGlu) t+=`Azúcar: media ${rGlu.avg}, rango ${rGlu.min}-${rGlu.max}\n`;
+  }
+  t += `\nAvisos/síntomas: ${avisos.length?avisos.length:"ninguno"}\n`;
+  avisos.forEach(r=> t+=` - ${fmtFecha(r.fecha)} ${r.hora}: ${r.tas?`TA ${r.tas}/${r.tad??"—"}`:""}${r.sintomas&&r.sintomas.length?` | ${r.sintomas.join("; ")}`:""}\n`);
+  t += `\nMedicación: días con tomas marcadas ${diasConToma}/${medDias.length}\n`;
+  if(notas.length){ t+=`\nNotas:\n`; notas.forEach(r=> t+=` - ${fmtFecha(r.fecha)} ${r.hora}: ${r.nota}\n`); }
+  t += `\n(Resumen de lo registrado en la app. Umbrales provisionales. No es un documento médico.)`;
+
+  return { html, texto:t };
 }
 
 /* AJUSTES */
