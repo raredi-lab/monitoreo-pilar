@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0F766E">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>Cuidado de Pilar</title>
+<style>
+  :root{
+    --bg:#FAF7F2; --card:#FFFFFF; --ink:#1F2937; --muted:#6B7280;
+    --line:#E7E2D9; --teal:#0F766E; --teal-d:#0B5750;
+    --ok:#15803D; --ok-bg:#DCFCE7; --ok-line:#86EFAC;
+    --warn:#B45309; --warn-bg:#FEF3C7; --warn-line:#FCD34D;
+    --bad:#B91C1C; --bad-bg:#FEE2E2; --bad-line:#FCA5A5;
+    --radius:16px;
+    font-size:18px;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{
+    margin:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    line-height:1.45;padding-bottom:90px;
+  }
+  header{
+    position:sticky;top:0;z-index:30;background:var(--teal);color:#fff;
+    padding:14px 16px calc(14px + env(safe-area-inset-top)) 16px;
+    display:flex;align-items:center;gap:10px;
+  }
+  header .back{
+    background:rgba(255,255,255,.18);border:none;color:#fff;font-size:1.1rem;
+    width:42px;height:42px;border-radius:12px;cursor:pointer;flex:none;
+  }
+  header h1{font-size:1.25rem;margin:0;font-weight:700;letter-spacing:.2px}
+  header .sub{font-size:.78rem;opacity:.85;font-weight:400}
+  main{padding:16px;max-width:560px;margin:0 auto}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px;margin-bottom:14px;box-shadow:0 1px 2px rgba(0,0,0,.03)}
+  h2{font-size:1.1rem;margin:0 0 12px}
+  p{margin:.4rem 0}
+  .muted{color:var(--muted);font-size:.9rem}
+  .big-btn{
+    display:flex;align-items:center;gap:14px;width:100%;text-align:left;
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    padding:18px 16px;margin-bottom:12px;cursor:pointer;font-size:1.08rem;font-weight:600;color:var(--ink);
+  }
+  .big-btn .ico{font-size:1.6rem;width:44px;height:44px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:var(--bg);flex:none}
+  .big-btn small{display:block;font-weight:400;color:var(--muted);font-size:.82rem;margin-top:2px}
+  .big-btn.alarm{background:var(--bad-bg);border-color:var(--bad-line);color:var(--bad)}
+  .big-btn.alarm .ico{background:#fff}
+  .btn{
+    display:block;width:100%;border:none;border-radius:14px;padding:16px;
+    font-size:1.05rem;font-weight:700;cursor:pointer;text-align:center;
+    background:var(--teal);color:#fff;margin-top:10px;
+  }
+  .btn.ghost{background:transparent;color:var(--teal);border:1.5px solid var(--teal)}
+  .btn.danger{background:var(--bad)}
+  .field{margin-bottom:14px}
+  .field label{display:block;font-weight:600;margin-bottom:6px;font-size:.95rem}
+  .field .hint{font-weight:400;color:var(--muted);font-size:.82rem}
+  .row{display:flex;gap:10px}
+  .row .field{flex:1}
+  input[type=number],input[type=text],input[type=tel]{
+    width:100%;font-size:1.3rem;padding:14px;border:1.5px solid var(--line);border-radius:12px;
+    background:#fff;color:var(--ink);font-weight:600;
+  }
+  input:focus{outline:none;border-color:var(--teal)}
+  .sym{
+    display:flex;align-items:flex-start;gap:12px;padding:12px;border:1.5px solid var(--line);
+    border-radius:12px;margin-bottom:8px;cursor:pointer;font-size:.98rem;
+  }
+  .sym input{width:24px;height:24px;flex:none;margin-top:2px;accent-color:var(--bad)}
+  .sym.on{background:var(--bad-bg);border-color:var(--bad-line)}
+  .result{border-radius:var(--radius);padding:18px;margin-bottom:14px;border:2px solid}
+  .result h2{margin-top:0}
+  .result.ok{background:var(--ok-bg);border-color:var(--ok-line)}
+  .result.ok h2{color:var(--ok)}
+  .result.warn{background:var(--warn-bg);border-color:var(--warn-line)}
+  .result.warn h2{color:var(--warn)}
+  .result.bad{background:var(--bad-bg);border-color:var(--bad-line)}
+  .result.bad h2{color:var(--bad)}
+  .tag{display:inline-block;padding:3px 10px;border-radius:999px;font-size:.78rem;font-weight:700;margin-left:6px;vertical-align:middle}
+  .tag.ok{background:var(--ok);color:#fff}
+  .tag.warn{background:var(--warn);color:#fff}
+  .tag.bad{background:var(--bad);color:#fff}
+  .call{display:flex;align-items:center;gap:12px;background:var(--bad);color:#fff;text-decoration:none;
+    padding:16px;border-radius:14px;font-weight:700;font-size:1.1rem;margin:8px 0}
+  .call.alt{background:var(--teal)}
+  .call .ico{font-size:1.5rem}
+  .med{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--line);border-radius:12px;margin-bottom:8px}
+  .med input{width:26px;height:26px;flex:none;accent-color:var(--ok)}
+  .med.done{opacity:.8;border-color:var(--ok-line);background:var(--ok-bg)}
+  .med .cond{display:block;font-size:.8rem;color:var(--warn);font-weight:600;text-decoration:none}
+  .medtime{display:block;font-size:.8rem;color:var(--ok);font-weight:700;margin-top:2px}
+  .med-group{font-weight:700;margin:16px 0 8px;color:var(--teal);font-size:.95rem;text-transform:uppercase;letter-spacing:.5px}
+  .hist-item{border-left:4px solid var(--line);padding:8px 0 8px 12px;margin-bottom:6px}
+  .hist-item.ok{border-color:var(--ok)} .hist-item.warn{border-color:var(--warn)} .hist-item.bad{border-color:var(--bad)}
+  .hist-item .when{font-size:.8rem;color:var(--muted)}
+  .del-btn{flex:none;background:var(--bad-bg);border:1px solid var(--bad-line);color:var(--bad);
+    width:42px;height:42px;border-radius:10px;font-size:1.1rem;cursor:pointer}
+  .hist-item .vals{font-weight:600}
+  .note{background:#FFF8E6;border:1px solid var(--warn-line);border-radius:12px;padding:12px;font-size:.85rem;margin-top:10px}
+  .disc{font-size:.78rem;color:var(--muted);text-align:center;padding:8px 16px 24px}
+  nav{
+    position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--line);
+    display:flex;justify-content:space-around;padding:6px 0 calc(6px + env(safe-area-inset-bottom));z-index:30;
+  }
+  nav button{background:none;border:none;color:var(--muted);font-size:.7rem;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 10px;cursor:pointer;font-weight:600}
+  nav button .ico{font-size:1.4rem}
+  nav button.active{color:var(--teal)}
+  .hidden{display:none}
+  ul{margin:.4rem 0;padding-left:1.2rem}
+  li{margin:.25rem 0}
+</style>
+</head>
+<body>
+
+<header>
+  <button class="back hidden" id="backBtn" aria-label="Atrás">‹</button>
+  <div>
+    <h1 id="title">Cuidado de Pilar</h1>
+    <div class="sub" id="subtitle">Seguimiento diario · Liz</div>
+  </div>
+</header>
+
+<main id="app"></main>
+
+<nav>
+  <button data-view="home" class="active"><span class="ico">🏠</span>Inicio</button>
+  <button data-view="constantes"><span class="ico">➕</span>Constantes</button>
+  <button data-view="medicacion"><span class="ico">💊</span>Medicación</button>
+  <button data-view="historial"><span class="ico">📋</span>Historial</button>
+  <button data-view="ajustes"><span class="ico">⚙️</span>Ajustes</button>
+</nav>
+
+<div class="disc">Esta app es una ayuda de registro y orientación. <b>No sustituye al médico ni al 112.</b> Ante la duda, llamar.</div>
+
+<script>
+"use strict";
+
+/* ---------- Almacenamiento ---------- */
+const KEYS = { reg:"pilar_registros", med:"pilar_medicacion", umb:"pilar_umbrales", tel:"pilar_telefonos" };
+function load(k, def){ try{ const v=localStorage.getItem(k); return v?JSON.parse(v):def; }catch(e){ return def; } }
+function save(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+
+/* Umbrales POR DEFECTO — provisionales, A VALIDAR CON SU MÉDICO */
+const UMB_DEF = {
+  tas_alta:180, tas_vigilar:160, tas_baja:120, tas_muy_baja:95,
+  tad_alta:110, tad_baja:60,
+  fc_alta:110, fc_baja:45,
+  spo2_vigilar:94, spo2_baja:92,
+  temp_fiebre:38, temp_alta:39,
+  glu_baja:70, glu_alta:300, glu_muy_alta:400
+};
+const TEL_DEF = { emergencia:"112", asisa:"900900118", centro:"" };
+
+let UMB = Object.assign({}, UMB_DEF, load(KEYS.umb,{}));
+let TEL = Object.assign({}, TEL_DEF, load(KEYS.tel,{}));
+
+/* ---------- Síntomas de alarma (siempre mandan sobre las cifras) ---------- */
+const SINTOMAS = [
+  "Dolor en el pecho u opresión",
+  "Le falta el aire / respira con dificultad",
+  "Dolor de cabeza muy fuerte y nuevo",
+  "Habla raro / boca torcida / pérdida de fuerza en un lado",
+  "Ve borroso o doble de repente",
+  "Está confusa, muy adormilada o no responde bien",
+  "Se ha desmayado o ha perdido el conocimiento",
+  "Mareo o inestabilidad fuerte de aparición brusca",
+  "Vómitos repetidos, debilidad marcada o convulsiones"
+];
+
+/* ---------- Medicación pautada (del informe de alta HLA, 07/06/2026) ---------- */
+/* Reflejo de la pauta del médico. NO es una indicación nueva: confirmar con receta electrónica. */
+const PAUTA = [
+  { grupo:"Mañana (desayuno)", items:[
+    {n:"Famotidina 40 mg", d:"1 comprimido"},
+    {n:"Aprovel 300 mg", d:"1 comprimido"},
+    {n:"Metformina 850 mg", d:"½ comprimido"},
+    {n:"Jardiance 10 mg", d:"1 comprimido"},
+    {n:"Poner parche Nitroderm 10 mg", d:"en la piel, por la mañana"}
+  ]},
+  { grupo:"Mediodía (comida)", items:[
+    {n:"Adiro 100 mg", d:"1 comprimido"}
+  ]},
+  { grupo:"Noche (cena)", items:[
+    {n:"Amlodipino 5 mg", d:"1 comprimido", cond:"Solo si la tensión alta (sistólica) es MAYOR de 120. Si es 120 o menos, NO darlo."},
+    {n:"Atozet 10/80 mg", d:"1 comprimido"},
+    {n:"Metformina 850 mg", d:"½ comprimido"}
+  ]},
+  { grupo:"Al acostarse", items:[
+    {n:"Alprazolam 0,5 mg", d:"1 comprimido"},
+    {n:"Quitar el parche Nitroderm", d:"retirar por la noche"}
+  ]}
+];
+const PAUTA_PERIODICA = "Hidroferol 0,266 mcg: 1 cápsula cada 4 semanas (no es diario).";
+
+/* ---------- Utilidades de fecha ---------- */
+function hoyISO(){ const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+function ahoraHora(){ const d=new Date(); return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0"); }
+function fmtFecha(iso){ const [y,m,d]=iso.split("-"); return d+"/"+m+"/"+y; }
+
+/* ---------- Motor de evaluación ---------- */
+/* Devuelve {nivel:'ok'|'warn'|'bad', titulo, mensajes:[], avisos_med:[]} */
+function evaluar(v, sintomasMarcados){
+  const msg = []; let nivel = "ok";
+  const subir = n => { const ord={ok:0,warn:1,bad:2}; if(ord[n]>ord[nivel]) nivel=n; };
+
+  // 1) SÍNTOMAS DE ALARMA -> siempre lo más grave, sin importar las cifras
+  if(sintomasMarcados && sintomasMarcados.length){
+    subir("bad");
+    msg.push({t:"bad", x:"Hay síntomas de alarma marcados. Esto manda por encima de cualquier cifra."});
+  }
+
+  // 2) Tensión arterial
+  if(v.tas!=null){
+    if(v.tas>=UMB.tas_alta || (v.tad!=null && v.tad>=UMB.tad_alta)){
+      subir("bad"); msg.push({t:"bad", x:`Tensión muy alta (${v.tas}/${v.tad??"—"}). Cifras de crisis hipertensiva.`});
+    } else if(v.tas>=UMB.tas_vigilar){
+      subir("warn"); msg.push({t:"warn", x:`Tensión elevada (${v.tas}/${v.tad??"—"}). Vigilar y repetir en 15–30 min.`});
+    } else if(v.tas<UMB.tas_muy_baja || (v.tad!=null && v.tad<UMB.tad_baja)){
+      subir("warn"); msg.push({t:"warn", x:`Tensión baja (${v.tas}/${v.tad??"—"}). Ojo a mareos y caídas.`});
+    } else if(v.tas<UMB.tas_baja){
+      subir("ok"); msg.push({t:"ok", x:`Tensión en zona baja-normal (${v.tas}/${v.tad??"—"}).`});
+    } else {
+      msg.push({t:"ok", x:`Tensión en rango (${v.tas}/${v.tad??"—"}).`});
+    }
+  }
+  // 3) Frecuencia cardíaca
+  if(v.fc!=null){
+    if(v.fc>=UMB.fc_alta){ subir("warn"); msg.push({t:"warn", x:`Pulso alto (${v.fc} lpm).`}); }
+    else if(v.fc<UMB.fc_baja){ subir("warn"); msg.push({t:"warn", x:`Pulso muy bajo (${v.fc} lpm).`}); }
+    else { msg.push({t:"ok", x:`Pulso normal (${v.fc} lpm).`}); }
+  }
+  // 4) Saturación de oxígeno
+  if(v.spo2!=null){
+    if(v.spo2<UMB.spo2_baja){ subir("bad"); msg.push({t:"bad", x:`Oxígeno bajo (${v.spo2}%).`}); }
+    else if(v.spo2<=UMB.spo2_vigilar){ subir("warn"); msg.push({t:"warn", x:`Oxígeno algo bajo (${v.spo2}%). Repetir bien colocado el medidor.`}); }
+    else { msg.push({t:"ok", x:`Oxígeno bien (${v.spo2}%).`}); }
+  }
+  // 5) Temperatura
+  if(v.temp!=null){
+    if(v.temp>=UMB.temp_alta){ subir("warn"); msg.push({t:"warn", x:`Fiebre (${v.temp}°C).`}); }
+    else if(v.temp>=UMB.temp_fiebre){ subir("warn"); msg.push({t:"warn", x:`Febrícula/fiebre (${v.temp}°C).`}); }
+    else { msg.push({t:"ok", x:`Temperatura normal (${v.temp}°C).`}); }
+  }
+  // 6) Glucosa
+  if(v.glu!=null){
+    if(v.glu<UMB.glu_baja){ subir("warn"); msg.push({t:"warn", x:`Azúcar bajo (${v.glu}). Hipoglucemia: dar algo azucarado (zumo, azúcar) si está consciente.`}); }
+    else if(v.glu>=UMB.glu_muy_alta){ subir("bad"); msg.push({t:"bad", x:`Azúcar muy alto (${v.glu}).`}); }
+    else if(v.glu>=UMB.glu_alta){ subir("warn"); msg.push({t:"warn", x:`Azúcar alto (${v.glu}).`}); }
+    else { msg.push({t:"ok", x:`Azúcar en rango (${v.glu}).`}); }
+  }
+
+  // Avisos de medicación condicionada
+  const avisos_med = [];
+  if(v.tas!=null && v.tas<=UMB.tas_baja){
+    avisos_med.push(`La sistólica es ${v.tas} (≤120): hoy NO se da el Amlodipino de la noche.`);
+  }
+
+  const titulo = nivel==="ok" ? "Todo dentro de lo esperado"
+               : nivel==="warn" ? "Algo está desajustado"
+               : "Atención: situación que requiere actuar";
+  return { nivel, titulo, mensajes:msg, avisos_med };
+}
+
+/* Texto de actuación según nivel + si hay síntomas */
+function guiaActuacion(nivel, haySintomas){
+  if(haySintomas || nivel==="bad" && haySintomas){
+    return { clase:"bad", call:"112", texto:[
+      "Llamar al 112 AHORA, sin esperar a tomar más mediciones.",
+      "Quédate con ella, mantenla sentada o tumbada y tranquila.",
+      "Ten a mano la lista de medicación y este registro."
+    ]};
+  }
+  if(nivel==="bad"){
+    return { clase:"bad", call:"asisa", texto:[
+      "Cifras de crisis aunque ahora no haya síntomas: contactar HOY con un médico.",
+      "Llamar a ASISA Urgencias para valoración (o al 112 si aparece cualquier síntoma).",
+      "Volver a medir en 15–30 min y anotar.",
+      "Si aparece dolor de pecho, falta de aire, habla rara o confusión → 112 inmediatamente."
+    ]};
+  }
+  if(nivel==="warn"){
+    return { clase:"warn", call:"asisa", texto:[
+      "Algo está fuera de rango pero está sin síntomas.",
+      "Volver a medir en 15–30 min en reposo y anotar.",
+      "Si se repite o empeora, contactar el mismo día (centro de salud / ASISA).",
+      "Vigilar la aparición de cualquier síntoma de alarma."
+    ]};
+  }
+  return { clase:"ok", call:null, texto:[
+    "Las constantes están dentro de lo esperado.",
+    "Registrar, dar la medicación según la pauta y seguir con normalidad.",
+    "Volver a medir esta noche (o cuando toque)."
+  ]};
+}
+
+/* ---------- Navegación ---------- */
+let stack = ["home"];
+function go(view, push=true){
+  if(push && stack[stack.length-1]!==view) stack.push(view);
+  render(view);
+  document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("active", b.dataset.view===view));
+  document.getElementById("backBtn").classList.toggle("hidden", stack.length<=1);
+  window.scrollTo(0,0);
+}
+document.getElementById("backBtn").onclick=()=>{ stack.pop(); const v=stack[stack.length-1]||"home"; render(v); document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("active", b.dataset.view===v)); document.getElementById("backBtn").classList.toggle("hidden", stack.length<=1); };
+document.querySelectorAll("nav button").forEach(b=> b.onclick=()=>{ stack=[b.dataset.view]; go(b.dataset.view,false); });
+
+const app = document.getElementById("app");
+const elTitle=document.getElementById("title"), elSub=document.getElementById("subtitle");
+
+/* ---------- Render por vista ---------- */
+function render(view){
+  if(view==="home") return viewHome();
+  if(view==="sintomas") return viewSintomas();
+  if(view==="constantes") return viewConstantes();
+  if(view==="resultado") return; // se renderiza tras evaluar
+  if(view==="medicacion") return viewMedicacion();
+  if(view==="medhist") return viewMedHistorial();
+  if(view==="historial") return viewHistorial();
+  if(view==="ajustes") return viewAjustes();
+}
+
+function callButtons(which){
+  let html="";
+  if(which==="112" || which==="bad"){
+    html += `<a class="call" href="tel:${TEL.emergencia}"><span class="ico">📞</span> Llamar al ${TEL.emergencia} (Emergencias)</a>`;
+  }
+  if(which==="asisa"){
+    if(TEL.asisa) html += `<a class="call alt" href="tel:${TEL.asisa}"><span class="ico">📞</span> ASISA Urgencias ${formatTel(TEL.asisa)}</a>`;
+    html += `<a class="call" href="tel:${TEL.emergencia}"><span class="ico">📞</span> 112 si aparece cualquier síntoma</a>`;
+    if(TEL.centro) html += `<a class="call alt" href="tel:${TEL.centro}"><span class="ico">📞</span> Centro de salud ${formatTel(TEL.centro)}</a>`;
+  }
+  return html;
+}
+function formatTel(t){ return t.replace(/(\d{3})(?=\d)/g,"$1 ").trim(); }
+
+/* HOME */
+function viewHome(){
+  elTitle.textContent="Cuidado de Pilar"; elSub.textContent="Seguimiento diario · Liz";
+  const regs = load(KEYS.reg,[]);
+  const ult = regs[0];
+  let ultHtml = "";
+  if(ult){
+    ultHtml = `<div class="card hist-item ${ult.nivel}" style="margin-top:0">
+      <div class="when">Última toma · ${fmtFecha(ult.fecha)} ${ult.hora}</div>
+      <div class="vals">${ult.tas?`TA ${ult.tas}/${ult.tad??"—"}`:""} ${ult.fc?`· ${ult.fc} lpm`:""} ${ult.spo2?`· O₂ ${ult.spo2}%`:""}</div>
+    </div>`;
+  }
+  app.innerHTML = `
+    <button class="big-btn alarm" onclick="go('sintomas')">
+      <span class="ico">🚨</span>
+      <span>¿Tiene síntomas de alarma ahora?<small>Empieza siempre por aquí si la ves mal</small></span>
+    </button>
+    <button class="big-btn" onclick="go('constantes')">
+      <span class="ico">➕</span>
+      <span>Registrar constantes<small>Tensión, pulso, oxígeno, temperatura, azúcar</small></span>
+    </button>
+    <button class="big-btn" onclick="go('medicacion')">
+      <span class="ico">💊</span>
+      <span>Medicación de hoy<small>Marca lo que ya le has dado</small></span>
+    </button>
+    <button class="big-btn" onclick="go('historial')">
+      <span class="ico">📋</span>
+      <span>Historial y tendencia<small>Para preparar la visita al médico</small></span>
+    </button>
+    ${ultHtml}
+    <div class="card">
+      <h2>Teléfonos</h2>
+      <a class="call" href="tel:${TEL.emergencia}"><span class="ico">📞</span> ${TEL.emergencia} · Emergencias</a>
+      ${TEL.asisa?`<a class="call alt" href="tel:${TEL.asisa}"><span class="ico">📞</span> ${formatTel(TEL.asisa)} · ASISA Urgencias</a>`:""}
+      ${TEL.centro?`<a class="call alt" href="tel:${TEL.centro}"><span class="ico">📞</span> ${formatTel(TEL.centro)} · Centro de salud</a>`:""}
+    </div>`;
+}
+
+/* SÍNTOMAS */
+function viewSintomas(){
+  elTitle.textContent="Síntomas de alarma"; elSub.textContent="Marca lo que veas ahora";
+  app.innerHTML = `
+    <div class="card">
+      <p>Marca <b>todo lo que notes en este momento</b>. Si marcas alguno, lo importante es <b>llamar, no seguir midiendo</b>.</p>
+      <div id="symList"></div>
+      <button class="btn" onclick="evaluarSoloSintomas()">Ver qué hacer</button>
+      <button class="btn ghost" onclick="go('constantes')">No hay síntomas, registrar constantes</button>
+    </div>`;
+  const list = document.getElementById("symList");
+  list.innerHTML = SINTOMAS.map((s,i)=>`
+    <label class="sym" id="sym${i}">
+      <input type="checkbox" value="${i}" onchange="this.closest('.sym').classList.toggle('on',this.checked)">
+      <span>${s}</span>
+    </label>`).join("");
+}
+function getSintomas(){ return Array.from(document.querySelectorAll('#symList input:checked, #symList2 input:checked')).map(c=>SINTOMAS[+c.value]); }
+function evaluarSoloSintomas(){
+  const sint = Array.from(document.querySelectorAll('#symList input:checked')).map(c=>SINTOMAS[+c.value]);
+  if(sint.length){
+    mostrarResultado({nivel:"bad",titulo:"Atención: hay síntomas de alarma",mensajes:[{t:"bad",x:"Síntomas marcados:"}],avisos_med:[]}, sint, {});
+  } else {
+    go('constantes');
+  }
+}
+
+/* CONSTANTES */
+function viewConstantes(){
+  elTitle.textContent="Registrar constantes"; elSub.textContent=fmtFecha(hoyISO())+" · "+ahoraHora();
+  app.innerHTML = `
+    <div class="card">
+      <h2>¿Cuándo se ha tomado?</h2>
+      <p class="muted" style="margin-top:0">Por defecto es ahora. Cámbialo si la toma fue antes.</p>
+      <div class="row">
+        <div class="field"><label>Fecha</label><input id="fecha" type="date" value="${hoyISO()}"></div>
+        <div class="field"><label>Hora</label><input id="hora" type="time" value="${ahoraHora()}"></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Tensión y pulso</h2>
+      <div class="row">
+        <div class="field"><label>Tensión alta <span class="hint">(sistólica)</span></label><input id="tas" type="number" inputmode="numeric" placeholder="ej. 140"></div>
+        <div class="field"><label>Tensión baja <span class="hint">(diastólica)</span></label><input id="tad" type="number" inputmode="numeric" placeholder="ej. 70"></div>
+      </div>
+      <div class="field"><label>Pulso <span class="hint">(latidos por minuto)</span></label><input id="fc" type="number" inputmode="numeric" placeholder="ej. 60"></div>
+    </div>
+    <div class="card">
+      <h2>Otras constantes <span class="hint" style="font-weight:400">(si las tienes)</span></h2>
+      <div class="row">
+        <div class="field"><label>Oxígeno <span class="hint">(%)</span></label><input id="spo2" type="number" inputmode="numeric" placeholder="ej. 96"></div>
+        <div class="field"><label>Temperatura <span class="hint">(°C)</span></label><input id="temp" type="number" inputmode="decimal" step="0.1" placeholder="ej. 36.5"></div>
+      </div>
+      <div class="field"><label>Azúcar <span class="hint">(glucemia, si se mide)</span></label><input id="glu" type="number" inputmode="numeric" placeholder="ej. 110"></div>
+    </div>
+    <div class="card">
+      <h2>¿Tiene algún síntoma ahora?</h2>
+      <p class="muted" style="margin-top:0">Marca lo que notes. Esto es lo más importante.</p>
+      <div id="symList2"></div>
+    </div>
+    <div class="card">
+      <div class="field"><label>Nota <span class="hint">(opcional: mareo, caída, cómo la ves…)</span></label><input id="nota" type="text" placeholder="Escribe aquí"></div>
+      <button class="btn" onclick="guardarYEvaluar()">Guardar y ver qué hacer</button>
+    </div>`;
+  const list=document.getElementById("symList2");
+  list.innerHTML = SINTOMAS.map((s,i)=>`
+    <label class="sym">
+      <input type="checkbox" value="${i}" onchange="this.closest('.sym').classList.toggle('on',this.checked)">
+      <span>${s}</span>
+    </label>`).join("");
+}
+function numOrNull(id){ const el=document.getElementById(id); if(!el||el.value==="") return null; const n=parseFloat(el.value.replace(",",".")); return isNaN(n)?null:n; }
+function guardarYEvaluar(){
+  const v = { tas:numOrNull("tas"), tad:numOrNull("tad"), fc:numOrNull("fc"), spo2:numOrNull("spo2"), temp:numOrNull("temp"), glu:numOrNull("glu") };
+  const sint = Array.from(document.querySelectorAll('#symList2 input:checked')).map(c=>SINTOMAS[+c.value]);
+  const nota = (document.getElementById("nota")||{}).value || "";
+  if(v.tas==null && v.tad==null && v.fc==null && v.spo2==null && v.temp==null && v.glu==null && !sint.length){
+    alert("Introduce al menos una constante o marca un síntoma."); return;
+  }
+  const res = evaluar(v, sint);
+  // fecha y hora de la toma (editables; por defecto ahora)
+  const fecha = val("fecha") || hoyISO();
+  const hora = val("hora") || ahoraHora();
+  // guardar registro
+  const regs = load(KEYS.reg,[]);
+  regs.unshift({ fecha, hora, ...v, sintomas:sint, nivel:res.nivel, nota });
+  regs.sort((a,b)=> (b.fecha+(b.hora||"")).localeCompare(a.fecha+(a.hora||"")));
+  save(KEYS.reg, regs.slice(0,500));
+  mostrarResultado(res, sint, v, nota, fecha, hora);
+}
+
+/* RESULTADO */
+function mostrarResultado(res, sint, v, nota, fecha, hora){
+  elTitle.textContent="Qué hacer"; elSub.textContent=fmtFecha(fecha||hoyISO())+" · "+(hora||ahoraHora());
+  stack.push("resultado"); document.getElementById("backBtn").classList.remove("hidden");
+  const guia = guiaActuacion(res.nivel, sint.length>0);
+  let medAvisos = res.avisos_med.map(a=>`<p>⚠️ ${a}</p>`).join("");
+  let sintHtml = sint.length ? `<ul>${sint.map(s=>`<li><b>${s}</b></li>`).join("")}</ul>` : "";
+  let detalle = res.mensajes.filter(m=>m.x).map(m=>`<p>${m.t==="bad"?"🔴":m.t==="warn"?"🟠":"🟢"} ${m.x}</p>`).join("");
+
+  app.innerHTML = `
+    <div class="result ${guia.clase}">
+      <h2>${res.titulo} <span class="tag ${guia.clase}">${guia.clase==="ok"?"BIEN":guia.clase==="warn"?"VIGILAR":"ACTUAR"}</span></h2>
+      ${sintHtml}
+      <div style="margin-top:8px"><b>Qué hacer:</b>
+        <ul>${guia.texto.map(t=>`<li>${t}</li>`).join("")}</ul>
+      </div>
+      ${guia.call?callButtons(guia.call):""}
+    </div>
+    ${detalle?`<div class="card"><h2>Lectura de las constantes</h2>${detalle}</div>`:""}
+    ${medAvisos?`<div class="note"><b>Aviso de medicación</b>${medAvisos}</div>`:""}
+    <div class="card">
+      <button class="btn ghost" onclick="go('medicacion')">Ir a la medicación de hoy</button>
+      <button class="btn ghost" onclick="stack=['home'];go('home',false)">Volver al inicio</button>
+    </div>
+    <div class="note">Recuerda: el diagnóstico de urgencias no es definitivo. Tras cualquier episodio conviene revisión con su médico habitual.</div>`;
+}
+
+/* MEDICACIÓN */
+function medNombre(id){ const m=id.match(/^m_(\d+)_(\d+)$/); if(!m) return id; const g=PAUTA[+m[1]]; if(!g) return id; const it=g.items[+m[2]]; return it?it.n:id; }
+function medGrupo(id){ const m=id.match(/^m_(\d+)_(\d+)$/); if(!m||!PAUTA[+m[1]]) return ""; return PAUTA[+m[1]].grupo; }
+function medHecho(v){ return v===true || (v && v.hecho); }
+function medHora(v){ return (v && v.hora) ? v.hora : ""; }
+
+function viewMedicacion(){
+  elTitle.textContent="Medicación de hoy"; elSub.textContent=fmtFecha(hoyISO());
+  const fecha=hoyISO();
+  const estado = load(KEYS.med,{})[fecha] || {};
+  let html = `<div class="note">Esta es la pauta del informe médico. <b>Confírmala siempre con la receta electrónica / caja.</b> No cambies dosis por tu cuenta.</div>`;
+  PAUTA.forEach((g,gi)=>{
+    html += `<div class="med-group">${g.grupo}</div>`;
+    g.items.forEach((it,ii)=>{
+      const id="m_"+gi+"_"+ii; const v=estado[id]; const done=medHecho(v); const hora=medHora(v);
+      html += `<label class="med ${done?'done':''}" id="lbl_${id}">
+        <input type="checkbox" ${done?"checked":""} onchange="toggleMed('${fecha}','${id}',this)">
+        <span><b>${it.n}</b> — ${it.d}${it.cond?`<span class="cond">⚠️ ${it.cond}</span>`:""}<span class="medtime" id="t_${id}">${done&&hora?`✓ dado a las ${hora}`:""}</span></span>
+      </label>`;
+    });
+  });
+  html += `<div class="card" style="margin-top:14px"><p class="muted">${PAUTA_PERIODICA}</p>
+    <button class="btn ghost" onclick="go('medhist')">📋 Historial de tomas</button>
+    <button class="btn ghost" onclick="resetMed('${fecha}')">Empezar el día de nuevo</button></div>`;
+  app.innerHTML = html;
+}
+function toggleMed(fecha,id,el){
+  const all=load(KEYS.med,{}); all[fecha]=all[fecha]||{};
+  if(el.checked){ all[fecha][id]={hecho:true, hora:ahoraHora()}; } else { delete all[fecha][id]; }
+  save(KEYS.med,all);
+  const lbl=document.getElementById("lbl_"+id); if(lbl) lbl.classList.toggle("done", el.checked);
+  const ts=document.getElementById("t_"+id); if(ts) ts.textContent = el.checked ? ("✓ dado a las "+(all[fecha][id].hora)) : "";
+}
+function resetMed(fecha){
+  if(!confirm("¿Desmarcar todas las tomas de hoy?")) return;
+  const all=load(KEYS.med,{}); all[fecha]={}; save(KEYS.med,all); viewMedicacion();
+}
+function viewMedHistorial(){
+  elTitle.textContent="Historial de tomas"; elSub.textContent="Medicación dada por día";
+  const all = load(KEYS.med,{});
+  const dias = Object.keys(all).filter(d=> Object.keys(all[d]||{}).some(id=>medHecho(all[d][id]))).sort().reverse();
+  if(!dias.length){ app.innerHTML=`<div class="card"><p>Todavía no hay tomas registradas. Marca la medicación en <b>Medicación de hoy</b>.</p></div>`; return; }
+  let html = `<div class="card"><p class="muted" style="margin-top:0">Lo que se le ha dado cada día, con la hora.</p></div>`;
+  dias.slice(0,60).forEach(d=>{
+    const est=all[d];
+    const tomas = Object.keys(est).filter(id=>medHecho(est[id]))
+      .map(id=>({n:medNombre(id), g:medGrupo(id), h:medHora(est[id])}))
+      .sort((a,b)=> (a.h||"").localeCompare(b.h||""));
+    html += `<div class="card"><div style="display:flex;justify-content:space-between;align-items:center">
+        <h2 style="margin:0">${fmtFecha(d)}</h2>
+        <button class="del-btn" aria-label="Borrar día" onclick="borrarDiaMed('${d}')">🗑️</button></div>`;
+    tomas.forEach(t=>{ html += `<div style="padding:6px 0;border-bottom:1px solid var(--line)"><b>${t.h||"—"}</b> · ${t.n}${t.g?` <span class="muted">(${t.g})</span>`:""}</div>`; });
+    html += `</div>`;
+  });
+  app.innerHTML = html;
+}
+function borrarDiaMed(d){
+  if(!confirm(`¿Borrar todas las tomas registradas del ${fmtFecha(d)}?\nNo se puede deshacer.`)) return;
+  const all=load(KEYS.med,{}); delete all[d]; save(KEYS.med,all); viewMedHistorial();
+}
+
+/* HISTORIAL */
+function viewHistorial(){
+  elTitle.textContent="Historial"; elSub.textContent="Últimos registros";
+  const regs = load(KEYS.reg,[]);
+  if(!regs.length){ app.innerHTML=`<div class="card"><p>Todavía no hay registros. Empieza por <b>Registrar constantes</b>.</p></div>`; return; }
+  let items = regs.slice(0,60).map((r,i)=>`
+    <div class="hist-item ${r.nivel}" style="display:flex;align-items:flex-start;gap:10px">
+      <div style="flex:1">
+        <div class="when">${fmtFecha(r.fecha)} ${r.hora} ${r.nivel==="bad"?"🔴":r.nivel==="warn"?"🟠":"🟢"}</div>
+        <div class="vals">${r.tas?`TA ${r.tas}/${r.tad??"—"}`:""} ${r.fc?`· ${r.fc} lpm`:""} ${r.spo2?`· O₂ ${r.spo2}%`:""} ${r.temp?`· ${r.temp}°`:""} ${r.glu?`· glu ${r.glu}`:""}</div>
+        ${r.sintomas&&r.sintomas.length?`<div class="muted">Síntomas: ${r.sintomas.join("; ")}</div>`:""}
+        ${r.nota?`<div class="muted">Nota: ${r.nota}</div>`:""}
+      </div>
+      <button class="del-btn" aria-label="Borrar registro" onclick="borrarRegistro(${i})">🗑️</button>
+    </div>`).join("");
+  app.innerHTML = `
+    <div class="card"><h2>Para el médico</h2>
+      <button class="btn" onclick="copiarResumen()">Copiar resumen de los últimos 14 días</button>
+      <p class="muted">Pega el texto en un mensaje o muéstralo en la consulta.</p>
+      <button class="btn ghost" onclick="exportarArchivo()">📤 Exportar / compartir registros</button>
+    </div>
+    <div class="card"><h2>Registros</h2><p class="muted" style="margin-top:0">Pulsa 🗑️ para borrar un registro mal introducido.</p>${items}</div>`;
+}
+function borrarRegistro(i){
+  const regs = load(KEYS.reg,[]);
+  const r = regs[i]; if(!r) return;
+  const det = (r.tas?`TA ${r.tas}/${r.tad??"—"}`:"") + (r.fc?` · ${r.fc} lpm`:"");
+  if(confirm(`¿Borrar el registro del ${fmtFecha(r.fecha)} a las ${r.hora}?\n${det.trim()}\n\nEsta acción no se puede deshacer.`)){
+    regs.splice(i,1); save(KEYS.reg, regs); viewHistorial();
+  }
+}
+function copiarResumen(){
+  const regs=load(KEYS.reg,[]);
+  const lim=new Date(); lim.setDate(lim.getDate()-14);
+  const sel=regs.filter(r=> new Date(r.fecha)>=lim);
+  let txt="Registro de constantes de Pilar (últimos 14 días)\n\n";
+  sel.forEach(r=>{ txt+=`${fmtFecha(r.fecha)} ${r.hora}: `+
+    [r.tas?`TA ${r.tas}/${r.tad??"—"}`:"",r.fc?`FC ${r.fc}`:"",r.spo2?`O2 ${r.spo2}%`:"",r.temp?`T ${r.temp}`:"",r.glu?`glu ${r.glu}`:""].filter(Boolean).join(", ")+
+    (r.sintomas&&r.sintomas.length?` | síntomas: ${r.sintomas.join("; ")}`:"")+(r.nota?` | ${r.nota}`:"")+"\n"; });
+  if(!sel.length) txt+="(sin registros en este periodo)";
+  navigator.clipboard?.writeText(txt).then(()=>alert("Resumen copiado."),()=>prompt("Copia este texto:",txt));
+}
+
+/* AJUSTES */
+function viewAjustes(){
+  elTitle.textContent="Ajustes"; elSub.textContent="Teléfonos y umbrales";
+  app.innerHTML = `
+    <div class="card"><h2>Teléfonos</h2>
+      <div class="field"><label>Emergencias</label><input id="t_emer" type="tel" value="${TEL.emergencia}"></div>
+      <div class="field"><label>ASISA Urgencias</label><input id="t_asisa" type="tel" value="${TEL.asisa}"></div>
+      <div class="field"><label>Centro de salud <span class="hint">(opcional)</span></label><input id="t_centro" type="tel" value="${TEL.centro}"></div>
+      <button class="btn" onclick="guardarTel()">Guardar teléfonos</button>
+    </div>
+    <div class="card"><h2>Umbrales de aviso</h2>
+      <div class="note" style="margin-top:0"><b>Importante:</b> son valores provisionales orientativos. <b>Deben ser revisados y fijados por su médico</b> según el caso de Pilar.</div>
+      <div class="row"><div class="field"><label>Tensión muy alta (≥)</label><input id="u_tasa" type="number" value="${UMB.tas_alta}"></div>
+        <div class="field"><label>Tensión a vigilar (≥)</label><input id="u_tasv" type="number" value="${UMB.tas_vigilar}"></div></div>
+      <div class="row"><div class="field"><label>No dar Amlodipino si TAS ≤</label><input id="u_tasb" type="number" value="${UMB.tas_baja}"></div>
+        <div class="field"><label>Tensión baja (alerta) &lt;</label><input id="u_tasmb" type="number" value="${UMB.tas_muy_baja}"></div></div>
+      <div class="row"><div class="field"><label>Pulso alto (≥)</label><input id="u_fca" type="number" value="${UMB.fc_alta}"></div>
+        <div class="field"><label>Pulso bajo (&lt;)</label><input id="u_fcb" type="number" value="${UMB.fc_baja}"></div></div>
+      <div class="row"><div class="field"><label>Oxígeno bajo (&lt;)</label><input id="u_spo2" type="number" value="${UMB.spo2_baja}"></div>
+        <div class="field"><label>Fiebre (≥ °C)</label><input id="u_temp" type="number" step="0.1" value="${UMB.temp_fiebre}"></div></div>
+      <button class="btn" onclick="guardarUmb()">Guardar umbrales</button>
+      <button class="btn ghost" onclick="resetUmb()">Restaurar valores por defecto</button>
+    </div>
+    <div class="card"><h2>Compartir y copia de seguridad</h2>
+      <p class="muted" style="margin-top:0">Para enviar a otra persona o guardar a salvo las constantes y las tomas de medicación.</p>
+      <button class="btn" onclick="exportarArchivo()">📤 Exportar a archivo</button>
+      <p class="muted">Crea un archivo (constantes + tomas de medicación + ajustes) para compartir por WhatsApp o correo.</p>
+      <button class="btn ghost" onclick="copiarTodo()">📋 Copiar como texto</button>
+      <hr style="border:none;border-top:1px solid var(--line);margin:16px 0">
+      <input type="file" id="fileImport" accept=".json,application/json" style="display:none" onchange="importarArchivo(this)">
+      <button class="btn ghost" onclick="document.getElementById('fileImport').click()">📥 Importar desde archivo</button>
+      <div class="field" style="margin-top:12px"><label>O pega aquí el texto recibido</label>
+        <input id="importText" type="text" placeholder="Pega el texto y pulsa Importar"></div>
+      <button class="btn ghost" onclick="importarTexto()">Importar texto pegado</button>
+      <div class="note">Al importar, las constantes y las tomas de medicación se <b>combinan</b> con lo que ya hay (no se pierde nada y se evitan duplicados). Los teléfonos y umbrales solo se cambian si lo confirmas.</div>
+    </div>`;
+}
+
+/* ---- Exportar / Importar ---- */
+function paqueteDatos(){
+  return { app:"cuidado_pilar", version:1, exportado:new Date().toISOString(),
+    datos:{ registros:load(KEYS.reg,[]), medicacion:load(KEYS.med,{}), umbrales:load(KEYS.umb,{}), telefonos:load(KEYS.tel,{}) } };
+}
+function exportarArchivo(){
+  const txt = JSON.stringify(paqueteDatos(),null,2);
+  const blob = new Blob([txt],{type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href=url; a.download="cuidado_pilar_"+hoyISO()+".json";
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),2000);
+}
+function copiarTodo(){
+  const txt = JSON.stringify(paqueteDatos());
+  if(navigator.clipboard){ navigator.clipboard.writeText(txt).then(()=>alert("Copiado. Pégalo en un mensaje para compartir."),()=>prompt("Copia este texto:",txt)); }
+  else prompt("Copia este texto:",txt);
+}
+function importarArchivo(input){
+  const f = input.files && input.files[0]; if(!f) return;
+  const reader = new FileReader();
+  reader.onload = e => { aplicarImportacion(e.target.result); input.value=""; };
+  reader.onerror = ()=> alert("No se pudo leer el archivo.");
+  reader.readAsText(f);
+}
+function importarTexto(){
+  const t = val("importText"); if(!t){ alert("Pega primero el texto."); return; }
+  aplicarImportacion(t);
+}
+function firmaReg(r){ return [r.fecha,r.hora,r.tas,r.tad,r.fc,r.spo2,r.temp,r.glu,r.nota].join("|"); }
+function aplicarImportacion(text){
+  let obj;
+  try{ obj = JSON.parse(text); }catch(e){ alert("El contenido no es válido (no se pudo leer)."); return; }
+  // admite el formato de copia (.datos) o una lista de registros directa
+  let d = obj && obj.datos ? obj.datos : (Array.isArray(obj) ? {registros:obj} : obj);
+  const nuevos = Array.isArray(d.registros) ? d.registros : null;
+  if(!nuevos){ alert("No se encontraron registros en lo que has importado."); return; }
+  const actuales = load(KEYS.reg,[]);
+  const vistos = new Set(actuales.map(firmaReg));
+  let añadidos = 0;
+  nuevos.forEach(r=>{ if(r && !vistos.has(firmaReg(r))){ actuales.push(r); vistos.add(firmaReg(r)); añadidos++; } });
+  actuales.sort((a,b)=> (b.fecha+(b.hora||"")).localeCompare(a.fecha+(a.hora||"")));
+  save(KEYS.reg, actuales.slice(0,1000));
+  // medicación: combinar por día (sin pisar)
+  if(d.medicacion && typeof d.medicacion==="object"){
+    const med = load(KEYS.med,{});
+    for(const k in d.medicacion){ med[k] = Object.assign({}, med[k], d.medicacion[k]); }
+    save(KEYS.med, med);
+  }
+  // ajustes: solo si el usuario lo confirma
+  const tieneAjustes = (d.telefonos && Object.keys(d.telefonos).length) || (d.umbrales && Object.keys(d.umbrales).length);
+  let msg = `Importación correcta.\nRegistros nuevos añadidos: ${añadidos}\nTotal de registros: ${actuales.length}`;
+  if(tieneAjustes && confirm("¿Importar también los teléfonos y umbrales del archivo? (sustituirán a los actuales)")){
+    if(d.telefonos){ TEL=Object.assign({},TEL_DEF,d.telefonos); save(KEYS.tel,TEL); }
+    if(d.umbrales){ UMB=Object.assign({},UMB_DEF,d.umbrales); save(KEYS.umb,UMB); }
+    msg += "\nTeléfonos y umbrales actualizados.";
+  }
+  alert(msg);
+  viewAjustes();
+}
+function guardarTel(){ TEL={emergencia:val("t_emer")||"112",asisa:val("t_asisa"),centro:val("t_centro")}; save(KEYS.tel,TEL); alert("Teléfonos guardados."); }
+function guardarUmb(){
+  UMB.tas_alta=+val("u_tasa")||UMB.tas_alta; UMB.tas_vigilar=+val("u_tasv")||UMB.tas_vigilar;
+  UMB.tas_baja=+val("u_tasb")||UMB.tas_baja; UMB.tas_muy_baja=+val("u_tasmb")||UMB.tas_muy_baja;
+  UMB.fc_alta=+val("u_fca")||UMB.fc_alta; UMB.fc_baja=+val("u_fcb")||UMB.fc_baja;
+  UMB.spo2_baja=+val("u_spo2")||UMB.spo2_baja; UMB.temp_fiebre=+val("u_temp")||UMB.temp_fiebre;
+  save(KEYS.umb,UMB); alert("Umbrales guardados.");
+}
+function resetUmb(){ UMB=Object.assign({},UMB_DEF); save(KEYS.umb,UMB); viewAjustes(); }
+function val(id){ const e=document.getElementById(id); return e?e.value.trim():""; }
+
+go("home",false);
+</script>
+</body>
+</html>
